@@ -52,9 +52,9 @@ def main() -> None:
     st.title("Kafka Streamlit Dashboard")
     st.write("Real-time data from Kafka consumers")
 
-    temp_chart = st.line_chart()
-    humidity_chart = st.line_chart()
-    perceived_temp_chart = st.line_chart()
+    temp_chart_placeholder = st.empty()
+    humidity_chart_placeholder = st.empty()
+    perceived_temp_chart_placeholder = st.empty()
 
     while True:
         with lock:
@@ -63,11 +63,11 @@ def main() -> None:
             perceived_temp_df = pd.DataFrame(data["perceived_temperature"])
 
         if not temp_df.empty:
-            temp_chart.add_rows(temp_df.set_index("timestamp"))
+            temp_chart_placeholder.line_chart(temp_df.set_index("timestamp"))
         if not humidity_df.empty:
-            humidity_chart.add_rows(humidity_df.set_index("timestamp"))
+            humidity_chart_placeholder.line_chart(humidity_df.set_index("timestamp"))
         if not perceived_temp_df.empty:
-            perceived_temp_chart.add_rows(perceived_temp_df.set_index("timestamp"))
+            perceived_temp_chart_placeholder.line_chart(perceived_temp_df.set_index("timestamp"))
 
         time.sleep(1)
 
