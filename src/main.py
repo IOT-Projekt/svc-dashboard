@@ -1,75 +1,123 @@
+import datetime
 import streamlit as st
 import pandas as pd
-import threading
-import time
 from kafka_handler import KafkaConfig, setup_kafka_consumer
 import json
 
 def get_kafka_consumer() -> dict:
     kafka_config = KafkaConfig()
-    consumers = {
-        "temperatures": setup_kafka_consumer(kafka_config, ["temperatures"]),
-        "humidity": setup_kafka_consumer(kafka_config, ["humidity"]),
-        "perceived_temperature": setup_kafka_consumer(kafka_config, ["perceived_temperature"]),
-    }
-    return consumers
+    consumer = setup_kafka_consumer(kafka_config, ["temperatures", "humidity", "perceived_temperature"])
+    return consumer
 
-def read_messages(consumer, key, data, lock):
-    while True:
-        for message in consumer:
-            value_timestamp: tuple = get_value_timestamp(message)
-            print(value_timestamp[0], value_timestamp[1])
-            with lock:
-                data[key].append({"timestamp": value_timestamp[1], "value": value_timestamp[0]})
-                if len(data[key]) > 10000:
-                    data[key].pop(0)
-        time.sleep(1)
 
-def get_value_timestamp(message) -> tuple:
-    message = message.value["message"]
-    print(message)
-    if "payload" in message:
-        payload = json.loads(message)["payload"]
-        value = payload["perceived_temperature"] 
-        timestamp = payload["timestamp"]
-    else:
-        value = json.loads(message)["humidity"] if "humidity" in message else json.loads(message)["temperature_c"] 
-        timestamp = json.loads(message)["timestamp"]
+def get_perceived_temperature_value_timestamp(message) -> tuple:
+    message = message["message"]
+    print(message, type(message)) #TODO: remove
+    
+    payload = json.loads(message)["payload"]
+    value = payload["perceived_temperature"]
+    timestamp = payload["timestamp"]
+    timestamp = datetime.datetime.fromtimestamp(timestamp).strftime('%H:%M:%S')
+    print(timestamp)
+    
     return value, timestamp
 
+def get_humidity_value_timestamp(message) -> tuple:
+    # get the json string from the message
+    message = message["message"]
+
+    # get the humidity value and timestamp from the json object
+    value = json.loads(message)["humidity"]
+    timestamp = json.loads(message)["timestamp"]
+    
+    # convert the timestamp to a datetime object
+    timestamp = datetime.datetime.fromtimestamp(timestamp).strftime('%H:%M:%S')
+    print(timestamp)
+
+    return value, timestamp
+
+def get_temperature_value_timestamp(message) -> tuple:
+    # get the json string from the message
+    message = message["message"]
+    
+    # get the temperature value and timestamp from the json object
+    value = json.loads(message)["temperature_c"]
+    timestamp = json.loads(message)["timestamp"]
+    
+    # convert the timestamp to a datetime object
+    timestamp = datetime.datetime.fromtimestamp(timestamp).strftime('%H:%M:%S')
+    print(timestamp)
+    return value, timestamp
+
+
+def update_df_and_dashboard(data: list, data_frame: pd.DataFrame, dashboard) -> None:
+    data_frame = pd.DataFrame(data)
+    dashboard = dashboard.line_chart(data_frame, x="timestamp", y="value")
+    
+def setup_streamlit_dashboard() -> dict:
+    # set the title and description of the dashboard
+    st.title("Kafka Dashboard")
+    st.write("Dieses Dashboard zeigt die Werte der Topics: temperatures, humidity und perceived_temperature an.")
+    
+    temp_chart = st.empty()
+    humidity_chart = st.empty()
+    perceived_temp_chart = st.empty()
+    
+    # create map for dashboards
+    return {
+        "temperatures": temp_chart,
+        "humidity": humidity_chart,
+        "perceived_temperature": perceived_temp_chart
+    }
+    
+    
 def main() -> None:
-    consumers = get_kafka_consumer()
+    kafka_consumer = get_kafka_consumer()
+    
+    # Mapping for value lists
     data = {
         "temperatures": [],
         "humidity": [],
         "perceived_temperature": [],
     }
-    lock = threading.Lock()
+    
+    # Mapping for data frames
+    data_frames = {
+        "temperatures": pd.DataFrame(),
+        "humidity": pd.DataFrame(),
+        "perceived_temperature": pd.DataFrame(),
+    }
+    
+    # Create the streamlit app
+    dashboards = setup_streamlit_dashboard()
+    
+    # Check the topic for every message and append it to the corresponding list
+    for message in kafka_consumer:
+        print(f"Received message: {message.topic} -> {message.value}") #TODO: remove
+        match message.topic:
+            # Check the topic and append the value and timestamp to the corresponding list
+            case "humidity":
+                value_timestamp: tuple = get_humidity_value_timestamp(message.value)
+                add_data(data["humidity"], value_timestamp)
+                update_df_and_dashboard(data["humidity"], data_frames["humidity"], dashboards["humidity"])
+                pass
+            
+            case "temperatures":
+                value_timestamp: tuple = get_temperature_value_timestamp(message.value)
+                add_data(data["temperatures"], value_timestamp)
+                update_df_and_dashboard(data["temperatures"], data_frames["temperatures"], dashboards["temperatures"])
+                pass
+            
+            case "perceived_temperature":
+                value_timestamp: tuple = get_perceived_temperature_value_timestamp(message.value)
+                add_data(data["perceived_temperature"], value_timestamp)
+                update_df_and_dashboard(data["perceived_temperature"], data_frames["perceived_temperature"], dashboards["perceived_temperature"])
+                pass
 
-    for key, consumer in consumers.items():
-        threading.Thread(target=read_messages, args=(consumer, key, data, lock), daemon=True).start()
-
-    st.title("Kafka Streamlit Dashboard")
-    st.write("Real-time data from Kafka consumers")
-
-    temp_chart_placeholder = st.empty()
-    humidity_chart_placeholder = st.empty()
-    perceived_temp_chart_placeholder = st.empty()
-
-    while True:
-        with lock:
-            temp_df = pd.DataFrame(data["temperatures"])
-            humidity_df = pd.DataFrame(data["humidity"])
-            perceived_temp_df = pd.DataFrame(data["perceived_temperature"])
-
-        if not temp_df.empty:
-            temp_chart_placeholder.line_chart(temp_df.set_index("timestamp"))
-        if not humidity_df.empty:
-            humidity_chart_placeholder.line_chart(humidity_df.set_index("timestamp"))
-        if not perceived_temp_df.empty:
-            perceived_temp_chart_placeholder.line_chart(perceived_temp_df.set_index("timestamp"))
-
-        time.sleep(1)
+def add_data(list, value_timestamp):
+    list.append({"timestamp": value_timestamp[1], "value": value_timestamp[0]})
+    if len(list) > 15000:
+        list.pop(0)
 
 if __name__ == "__main__":
     main()
