@@ -121,33 +121,20 @@ def add_data(data_dict, value_timestamp, key):
     save_data_to_json(data_dict, DATA_FILE_NAME)
 
 
-def initialise_dashboards(data_frames, data):
-    update_df_and_dashboard(
-        data["humidity"],
-        pd.DataFrame(),
-        data_frames["humidity"],
-        y_axis="Luftfeuchtigkeit/%",
-        x_axis="Uhrzeit",
-    )
-    update_df_and_dashboard(
-        data["temperatures"],
-        pd.DataFrame(),
-        data_frames["temperatures"],
-        y_axis="Temperatur/°C",
-        x_axis="Uhrzeit",
-    )
-    update_df_and_dashboard(
-        data["perceived_temperature"],
-        pd.DataFrame(),
-        data_frames["perceived_temperature"],
-        y_axis="gefühlte Temperatur/°C",
-        x_axis="Uhrzeit",
-    )
-
-
 def main() -> None:
     kafka_consumer = get_kafka_consumer()
 
+    # Load the data from the json file, if there is no data create an empty dictionary
+    data = load_data_from_json(DATA_FILE_NAME)
+
+    # if there is data already, update the dashboard with the data
+    if not data:
+        data = {
+            "temperatures": [],
+            "humidity": [],
+            "perceived_temperature": [],
+        }
+        
     # Mapping for data frames
     data_frames = {
         "temperatures": pd.DataFrame(),
@@ -157,19 +144,6 @@ def main() -> None:
 
     # Create the streamlit app
     dashboards = setup_streamlit_dashboard()
-
-    # Load the data from the json file, if there is no data create an empty dictionary
-    data = load_data_from_json(DATA_FILE_NAME)
-
-    # if there is data already, update the dashboard with the data
-    if data:
-        initialise_dashboards(data_frames, data)
-    else:
-        data = {
-            "temperatures": [],
-            "humidity": [],
-            "perceived_temperature": [],
-        }
 
     # Check the topic for every message and append it to the corresponding list
     for message in kafka_consumer:
