@@ -9,16 +9,16 @@ def get_kafka_consumer() -> dict:
     consumer = setup_kafka_consumer(kafka_config, ["temperatures", "humidity", "perceived_temperature"])
     return consumer
 
-
 def get_perceived_temperature_value_timestamp(message) -> tuple:
+    # get the json string from the message
     message = message["message"]
-    print(message, type(message)) #TODO: remove
     
+    # get the perceived temperature value and timestamp from the json object
     payload = json.loads(message)["payload"]
     value = payload["perceived_temperature"]
     timestamp = payload["timestamp"]
+    # convert the timestamp to a datetime object
     timestamp = datetime.datetime.fromtimestamp(timestamp).strftime('%H:%M:%S')
-    print(timestamp)
     
     return value, timestamp
 
@@ -29,10 +29,8 @@ def get_humidity_value_timestamp(message) -> tuple:
     # get the humidity value and timestamp from the json object
     value = json.loads(message)["humidity"]
     timestamp = json.loads(message)["timestamp"]
-    
     # convert the timestamp to a datetime object
     timestamp = datetime.datetime.fromtimestamp(timestamp).strftime('%H:%M:%S')
-    print(timestamp)
 
     return value, timestamp
 
@@ -43,15 +41,15 @@ def get_temperature_value_timestamp(message) -> tuple:
     # get the temperature value and timestamp from the json object
     value = json.loads(message)["temperature_c"]
     timestamp = json.loads(message)["timestamp"]
-    
     # convert the timestamp to a datetime object
     timestamp = datetime.datetime.fromtimestamp(timestamp).strftime('%H:%M:%S')
-    print(timestamp)
+
     return value, timestamp
 
-
 def update_df_and_dashboard(data: list, data_frame: pd.DataFrame, dashboard) -> None:
+    # create a new data frame with the updated data
     data_frame = pd.DataFrame(data)
+    # update the dashboard with the new data frame
     dashboard = dashboard.line_chart(data_frame, x="timestamp", y="value")
     
 def setup_streamlit_dashboard() -> dict:
@@ -59,6 +57,7 @@ def setup_streamlit_dashboard() -> dict:
     st.title("Kafka Dashboard")
     st.write("Dieses Dashboard zeigt die Werte der Topics: temperatures, humidity und perceived_temperature an.")
     
+    # create empty charts for the data
     temp_chart = st.empty()
     humidity_chart = st.empty()
     perceived_temp_chart = st.empty()
@@ -69,7 +68,11 @@ def setup_streamlit_dashboard() -> dict:
         "humidity": humidity_chart,
         "perceived_temperature": perceived_temp_chart
     }
-    
+
+def add_data(list, value_timestamp):
+    list.append({"timestamp": value_timestamp[1], "value": value_timestamp[0]})
+    if len(list) > 15000:
+        list.pop(0)
     
 def main() -> None:
     kafka_consumer = get_kafka_consumer()
@@ -93,7 +96,6 @@ def main() -> None:
     
     # Check the topic for every message and append it to the corresponding list
     for message in kafka_consumer:
-        print(f"Received message: {message.topic} -> {message.value}") #TODO: remove
         match message.topic:
             # Check the topic and append the value and timestamp to the corresponding list
             case "humidity":
@@ -113,11 +115,6 @@ def main() -> None:
                 add_data(data["perceived_temperature"], value_timestamp)
                 update_df_and_dashboard(data["perceived_temperature"], data_frames["perceived_temperature"], dashboards["perceived_temperature"])
                 pass
-
-def add_data(list, value_timestamp):
-    list.append({"timestamp": value_timestamp[1], "value": value_timestamp[0]})
-    if len(list) > 15000:
-        list.pop(0)
 
 if __name__ == "__main__":
     main()
