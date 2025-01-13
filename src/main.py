@@ -10,6 +10,7 @@ DATA_FILE_NAME = "src/data.json"
 
 logging.basicConfig(level=logging.INFO)
 
+
 def get_kafka_consumer() -> dict:
     kafka_config = KafkaConfig()
     consumer = setup_kafka_consumer(
@@ -21,6 +22,7 @@ def get_kafka_consumer() -> dict:
 def save_data_to_json(data: dict, file_name: str) -> None:
     with open(file_name, "w") as file:
         json.dump(data, file)
+
 
 def load_data_from_json(file_name: str) -> dict:
     try:
@@ -121,10 +123,34 @@ def add_data(data_dict, value_timestamp, key):
 
 def main() -> None:
     kafka_consumer = get_kafka_consumer()
-    
+
     # Load the data from the json file, if there is no data create an empty dictionary
     data = load_data_from_json(DATA_FILE_NAME)
-    if not data:
+    
+    # if there is data already, update the dashboard with the data
+    if data:
+        update_df_and_dashboard(
+            data["humidity"],
+            pd.DataFrame(),
+            st.empty(),
+            y_axis="Luftfeuchtigkeit/%",
+            x_axis="Uhrzeit",
+        )
+        update_df_and_dashboard(
+            data["temperatures"],
+            pd.DataFrame(),
+            st.empty(),
+            y_axis="Temperatur/°C",
+            x_axis="Uhrzeit",
+        )
+        update_df_and_dashboard(
+            data["perceived_temperature"],
+            pd.DataFrame(),
+            st.empty(),
+            y_axis="gefühlte Temperatur/°C",
+            x_axis="Uhrzeit",
+        )
+    else:
         data = {
             "temperatures": [],
             "humidity": [],
