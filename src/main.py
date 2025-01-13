@@ -4,9 +4,11 @@ import pandas as pd
 from kafka_handler import KafkaConfig, setup_kafka_consumer
 import json
 import altair as alt
+import logging
 
 DATA_FILE_NAME = "src/data.json"
 
+logging.basicConfig(level=logging.INFO)
 
 def get_kafka_consumer() -> dict:
     kafka_config = KafkaConfig()
@@ -21,8 +23,11 @@ def save_data_to_json(data: dict, file_name: str) -> None:
         json.dump(data, file)
 
 def load_data_from_json(file_name: str) -> dict:
-    with open(file_name, "r") as file:
-        return json.load(file)
+    try:
+        with open(file_name, "r") as file:
+            return json.load(file)
+    except:
+        return {}
 
 
 def get_perceived_temperature_value_timestamp(message) -> tuple:
