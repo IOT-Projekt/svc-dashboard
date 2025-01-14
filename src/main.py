@@ -41,7 +41,7 @@ def get_perceived_temperature_value_timestamp(message) -> tuple:
     value = payload["perceived_temperature"]
     timestamp = payload["timestamp"]
     # convert the timestamp to a datetime object
-    timestamp = datetime.datetime.fromtimestamp(timestamp).strftime("%H:%M:%S")
+    timestamp = datetime.datetime.fromtimestamp(timestamp).strftime("%d.%m %H:%M:%S")
 
     return value, timestamp
 
@@ -54,7 +54,7 @@ def get_humidity_value_timestamp(message) -> tuple:
     value = json.loads(message)["humidity"]
     timestamp = json.loads(message)["timestamp"]
     # convert the timestamp to a datetime object
-    timestamp = datetime.datetime.fromtimestamp(timestamp).strftime("%H:%M:%S")
+    timestamp = datetime.datetime.fromtimestamp(timestamp).strftime("%d.%m %H:%M:%S")
 
     return value, timestamp
 
@@ -67,7 +67,7 @@ def get_temperature_value_timestamp(message) -> tuple:
     value = json.loads(message)["temperature_c"]
     timestamp = json.loads(message)["timestamp"]
     # convert the timestamp to a datetime object
-    timestamp = datetime.datetime.fromtimestamp(timestamp).strftime("%H:%M:%S")
+    timestamp = datetime.datetime.fromtimestamp(timestamp).strftime("%d.%m %H:%M:%S")
 
     return value, timestamp
 
