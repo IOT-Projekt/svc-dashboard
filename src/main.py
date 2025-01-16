@@ -114,7 +114,7 @@ def add_data(data_dict, value_timestamp, key):
     data_dict[key].append(
         {"timestamp": value_timestamp[1], "value": value_timestamp[0]}
     )
-    if len(data_dict[key]) > 15000:
+    if len(data_dict[key]) > 5000:
         data_dict[key].pop(0)
 
     # Save the data to a json file
