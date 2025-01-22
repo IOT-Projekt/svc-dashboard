@@ -10,6 +10,7 @@ DATA_FILE_NAME = "src/data.json"
 
 logging.basicConfig(level=logging.INFO)
 
+
 def get_kafka_consumer() -> dict:
     kafka_config = KafkaConfig()
     consumer = setup_kafka_consumer(
@@ -21,6 +22,7 @@ def get_kafka_consumer() -> dict:
 def save_data_to_json(data: dict, file_name: str) -> None:
     with open(file_name, "w") as file:
         json.dump(data, file)
+
 
 def load_data_from_json(file_name: str) -> dict:
     try:
@@ -39,7 +41,7 @@ def get_perceived_temperature_value_timestamp(message) -> tuple:
     value = payload["perceived_temperature"]
     timestamp = payload["timestamp"]
     # convert the timestamp to a datetime object
-    timestamp = datetime.datetime.fromtimestamp(timestamp).strftime("%H:%M:%S")
+    timestamp = datetime.datetime.fromtimestamp(timestamp).strftime("%d.%m %H:%M:%S")
 
     return value, timestamp
 
@@ -52,7 +54,7 @@ def get_humidity_value_timestamp(message) -> tuple:
     value = json.loads(message)["humidity"]
     timestamp = json.loads(message)["timestamp"]
     # convert the timestamp to a datetime object
-    timestamp = datetime.datetime.fromtimestamp(timestamp).strftime("%H:%M:%S")
+    timestamp = datetime.datetime.fromtimestamp(timestamp).strftime("%d.%m %H:%M:%S")
 
     return value, timestamp
 
@@ -65,7 +67,7 @@ def get_temperature_value_timestamp(message) -> tuple:
     value = json.loads(message)["temperature_c"]
     timestamp = json.loads(message)["timestamp"]
     # convert the timestamp to a datetime object
-    timestamp = datetime.datetime.fromtimestamp(timestamp).strftime("%H:%M:%S")
+    timestamp = datetime.datetime.fromtimestamp(timestamp).strftime("%d.%m %H:%M:%S")
 
     return value, timestamp
 
@@ -112,7 +114,7 @@ def add_data(data_dict, value_timestamp, key):
     data_dict[key].append(
         {"timestamp": value_timestamp[1], "value": value_timestamp[0]}
     )
-    if len(data_dict[key]) > 15000:
+    if len(data_dict[key]) > 5000:
         data_dict[key].pop(0)
 
     # Save the data to a json file
@@ -121,16 +123,18 @@ def add_data(data_dict, value_timestamp, key):
 
 def main() -> None:
     kafka_consumer = get_kafka_consumer()
-    
+
     # Load the data from the json file, if there is no data create an empty dictionary
     data = load_data_from_json(DATA_FILE_NAME)
+
+    # if there is data already, update the dashboard with the data
     if not data:
         data = {
             "temperatures": [],
             "humidity": [],
             "perceived_temperature": [],
         }
-
+        
     # Mapping for data frames
     data_frames = {
         "temperatures": pd.DataFrame(),
