@@ -17,6 +17,7 @@ services:
     image: tailscale/tailscale:latest
     container_name: ts-dashboard
     hostname: dashboard
+    network_mode: host
     dns:
      - 1.1.1.1
     environment:
