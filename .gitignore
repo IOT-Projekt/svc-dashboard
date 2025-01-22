@@ -2,3 +2,4 @@ env/
 .infisical.json
 .src/__pycache__/
 .venv
+tailscale/state/*
