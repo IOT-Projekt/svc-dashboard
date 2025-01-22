@@ -3,36 +3,11 @@ services:
   dashboard-service:
     container_name: svc-dashboard
     image: svenschmidt1502/svc-dashboard:latest
+    network_mode: host
     environment:
       - 'KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS}' 
       - 'KAFKA_GROUP_ID=${KAFKA_GROUP_ID}' 
       - TZ=Europe/Berlin 
     deploy:
       replicas: 1
-    depends_on:
-      - tailscale-dashboard
-    network_mode: service:tailscale-dashboard 
 
-  tailscale-dashboard:
-    image: tailscale/tailscale:latest
-    container_name: ts-dashboard
-    hostname: dashboard
-    dns:
-     - 1.1.1.1
-    environment:
-      - TS_AUTHKEY=${DASHBOARD_TS_AUTH_KEY}
-      - TS_EXTRA_ARGS=--advertise-tags=tag:container
-      - TS_STATE_DIR=/var/lib/tailscale
-      - TS_SERVE_CONFIG=/config/dashboard.json
-      - TS_USERSPACE=false
-    volumes:
-      - ${CFG_PATH}/tailscale/tailscale-dashboard/state:/var/lib/tailscale
-      - ${CFG_PATH}/tailscale/tailscale-dashboard/config:/config
-      - /dev/net/tun:/dev/net/tun
-      - '/lib/modules:/lib/modules'
-    devices:
-      - /dev/net/tun:/dev/net/tun
-    cap_add:
-      - net_admin
-      - sys_module
-    restart: unless-stopped
