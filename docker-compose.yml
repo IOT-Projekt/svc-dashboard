@@ -17,6 +17,8 @@ services:
     image: tailscale/tailscale:latest
     container_name: ts-dashboard
     hostname: dashboard
+    dns:
+     - 1.1.1.1
     environment:
       - TS_AUTHKEY=${DASHBOARD_TS_AUTH_KEY}
       - TS_EXTRA_ARGS=--advertise-tags=tag:container
