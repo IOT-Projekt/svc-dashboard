@@ -27,6 +27,9 @@ services:
       - ${CFG_PATH}/tailscale/tailscale-dashboard/state:/var/lib/tailscale
       - ${CFG_PATH}/tailscale/tailscale-dashboard/config:/config
       - /dev/net/tun:/dev/net/tun
+      - '/lib/modules:/lib/modules'
+    devices:
+      - /dev/net/tun:/dev/net/tun
     cap_add:
       - net_admin
       - sys_module

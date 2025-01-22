@@ -1,5 +1,5 @@
 env/
 .infisical.json
 .venv
-tailscale/state/*
+tailscale/tailscale-dashboard/state/*
 src/data.json
