@@ -5,17 +5,17 @@ from kafka_handler import KafkaConfig, setup_kafka_consumer
 import json
 import altair as alt
 import logging
+import os
 
 DATA_FILE_NAME = "src/data.json"
+KAFKA_CONSUMER_TOPICS = os.environ.get("KAFKA_CONSUMER_TOPICS").split(", ")
 
+# Setup Basic logging
 logging.basicConfig(level=logging.INFO)
-
 
 def get_kafka_consumer() -> dict:
     kafka_config = KafkaConfig()
-    consumer = setup_kafka_consumer(
-        kafka_config, ["temperatures", "humidity", "perceived_temperature"]
-    )
+    consumer = setup_kafka_consumer(kafka_config, KAFKA_CONSUMER_TOPICS)
     return consumer
 
 
@@ -134,7 +134,7 @@ def main() -> None:
             "humidity": [],
             "perceived_temperature": [],
         }
-        
+
     # Mapping for data frames
     data_frames = {
         "temperatures": pd.DataFrame(),
