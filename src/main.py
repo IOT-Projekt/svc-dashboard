@@ -184,7 +184,7 @@ def main() -> None:
                 )
                 pass
 
-            case "iot.devices.perceived_temperatures":
+            case "iot.services.perceived_temperatures":
                 value_timestamp: tuple = get_perceived_temperature_value_timestamp(
                     message.value
                 )
