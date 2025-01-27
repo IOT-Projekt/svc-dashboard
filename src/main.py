@@ -157,12 +157,12 @@ def main() -> None:
 
     # Create the streamlit app and get the empty dashboards
     dashboards = setup_streamlit_dashboard()
-
+    
     # Check the topic for every message and append the data to the corresponding list
     # Always: 1) get the value and timestamp tuple from the message. 2) add the data to the data dictionary. 3) update the dashboard with the new data
     for message in kafka_consumer:
         match message.topic:
-            case "humidity":
+            case "iot.devices.humidity":
                 value_timestamp: tuple = get_humidity_value_timestamp(message.value)
                 add_data(data, value_timestamp, key="humidity")
                 update_df_and_dashboard(
@@ -173,7 +173,7 @@ def main() -> None:
                 )
                 pass
 
-            case "temperatures":
+            case "iot.devices.temperatures":
                 value_timestamp: tuple = get_temperature_value_timestamp(message.value)
                 add_data(data, value_timestamp, key="temperatures")
                 update_df_and_dashboard(
@@ -184,7 +184,7 @@ def main() -> None:
                 )
                 pass
 
-            case "perceived_temperature":
+            case "iot.devices.perceived_temperatures":
                 value_timestamp: tuple = get_perceived_temperature_value_timestamp(
                     message.value
                 )
