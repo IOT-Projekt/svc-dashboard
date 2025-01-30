@@ -3,7 +3,6 @@ services:
   dashboard-service:
     container_name: svc-dashboard
     image: svenschmidt1502/svc-dashboard:latest
-    network_mode: host
     environment:
       - 'KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS}' 
       - 'KAFKA_GROUP_ID=${KAFKA_GROUP_ID}' 
@@ -13,6 +12,21 @@ services:
       - ./src/data.json:/src/data.json:rw
     deploy:
       replicas: 1
-
-     
-      
+    network_mode: service:tailscale
+  tailscale:
+    image: tailscale/tailscale:latest
+    container_name: ts-dashboard
+    hostname: dashboard
+    volumes:
+      - ./tailscale/tailscale-dashboard/state:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+      - ./tailscale/tailscale-dashboard/config:/config/
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - TS_AUTHKEY=tskey-client-kQFokmGx2511CNTRL-iDTZ2JkSb58Qccfejgfr58paGmSB4LNs
+      - TS_HOSTNAME=dashboard
+      - TS_EXTRA_ARGS=--advertise-tags=tag:container
+      - TS_SERVE_CONFIG=/config/tailscale-dashboard.json
+      - TS_STATE_DIR=/var/lib/tailscale

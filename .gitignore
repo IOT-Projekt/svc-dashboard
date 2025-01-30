@@ -2,3 +2,4 @@ env/
 .infisical.json
 .venv
 src/data.json
+tailscale
