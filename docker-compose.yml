@@ -9,6 +9,8 @@ services:
       - 'KAFKA_GROUP_ID=${KAFKA_GROUP_ID}' 
       - 'KAFKA_CONSUMER_TOPICS=${KAFKA_CONSUMER_TOPICS}'
       - TZ=Europe/Berlin 
+    volumes:
+      - src/data.json:src/data.json:rw
     deploy:
       replicas: 1
 
