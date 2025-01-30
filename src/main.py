@@ -165,21 +165,24 @@ def main() -> None:
     # Get the kafka consumer for the different topics
     kafka_consumer = get_kafka_consumer()
 
+    # Create the streamlit app and get the dashboards with json data
+    dashboards = setup_streamlit_dashboard()
+
     # If exists: load the old data from the json file
     # Data is basically a dictionary with the topics as keys and lists of dictionaries as values. Each dictionary in the list contains the value and timestamp of the message.
     data = load_data_from_json(DATA_FILE_NAME)
 
-    # if there is not data already create an empty dictionary
-    if not data:
+    # if there is data already create an dashboards with this data, else create an empty data dict
+    if data:
+        initialize_dashboards(data, dashboards)
+    else:
         data = {
             "temperatures": [],
             "humidity": [],
             "perceived_temperature": [],
         }
-
-    # Create the streamlit app and get the dashboards with json data
-    dashboards = setup_streamlit_dashboard()
-    initialize_dashboards(data, dashboards)
+    
+    
     
     # Check the topic for every message and append the data to the corresponding list
     # Always: 1) get the value and timestamp tuple from the message. 2) add the data to the data dictionary. 3) update the dashboard with the new data
