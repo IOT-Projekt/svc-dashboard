@@ -10,7 +10,9 @@ services:
       - 'KAFKA_CONSUMER_TOPICS=${KAFKA_CONSUMER_TOPICS}'
       - TZ=Europe/Berlin 
     volumes:
-      - src/data.json:/src/data.json:rw
+      - ./src/data.json:/src/data.json:rw
     deploy:
       replicas: 1
 
+     
+      
