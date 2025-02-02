@@ -25,7 +25,7 @@ services:
       - NET_ADMIN
       - SYS_MODULE
     environment:
-      - TS_AUTHKEY=tskey-client-kQFokmGx2511CNTRL-iDTZ2JkSb58Qccfejgfr58paGmSB4LNs
+      - TS_AUTHKEY=${TS_OAUTH_KEY}
       - TS_HOSTNAME=dashboard
       - TS_EXTRA_ARGS=--advertise-tags=tag:container
       - TS_SERVE_CONFIG=/config/tailscale-dashboard.json
